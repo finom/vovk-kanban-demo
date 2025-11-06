@@ -11,6 +11,7 @@ import {
 import {
   convertToModelMessages,
   jsonSchema,
+  type JSONSchema7,
   stepCountIs,
   streamText,
   tool,
@@ -67,10 +68,10 @@ export default class AiSdkController {
       tools: Object.fromEntries(
         tools.map(({ name, execute, description, parameters }) => [
           name,
-          tool<KnownAny, KnownAny>({
+          tool({
             execute,
             description,
-            inputSchema: jsonSchema(parameters as KnownAny),
+            inputSchema: jsonSchema(parameters as JSONSchema7),
           }),
         ]),
       ),

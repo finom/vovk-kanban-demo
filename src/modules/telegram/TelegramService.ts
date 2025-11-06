@@ -10,6 +10,7 @@ import {
   ModelMessage,
   stepCountIs,
   tool,
+  type JSONSchema7,
 } from "ai";
 import { createLLMTools, KnownAny } from "vovk";
 import UserController from "../user/UserController";
@@ -279,10 +280,10 @@ export default class TelegramService {
         ...Object.fromEntries(
           tools.map(({ name, execute, description, parameters }) => [
             name,
-            tool<KnownAny, KnownAny>({
+            tool({
               execute,
               description,
-              inputSchema: jsonSchema(parameters as KnownAny),
+              inputSchema: jsonSchema(parameters as JSONSchema7),
             }),
           ]),
         ),
