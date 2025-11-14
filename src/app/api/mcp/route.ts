@@ -24,13 +24,6 @@ const { tools } = createLLMTools({
 const handler = createMcpHandler(
   (server) => {
     tools.forEach(({ name, execute, description, models }) => {
-      console.log(
-        JSON.stringify(
-          { name, description },
-          null,
-          2,
-        ),
-      );
       server.tool(
         name,
         description,
