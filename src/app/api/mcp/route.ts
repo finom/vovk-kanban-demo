@@ -3,7 +3,7 @@ import { createLLMTools } from "vovk";
 import UserController from "@/modules/user/UserController";
 import TaskController from "@/modules/task/TaskController";
 import { convertJsonSchemaToZod } from "zod-from-json-schema";
-import { mapValues } from "lodash";
+import mapValues from "lodash/mapValues";
 
 const { tools } = createLLMTools({
   modules: {
@@ -24,7 +24,7 @@ const { tools } = createLLMTools({
 const handler = createMcpHandler(
   (server) => {
     tools.forEach(({ name, execute, description, parameters }) => {
-      console.log({ name, description, parameters }, mapValues(parameters?.properties ?? {}, convertJsonSchemaToZod));
+      console.log({ name, description, parameters }, mapValues(parameters?.properties ?? {}, convertJsonSchemaToZod).body);
       server.tool(
         name,
         description,
