@@ -68,7 +68,7 @@
     "vovk-rust": "^0.0.1-draft.56",
     "yaml": "^2.8.1",
     "zod": "^4.1.12",
-    "zod-from-json-schema": "^0.5.1",
+    "zod-from-json-schema": "^0.5.2",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
