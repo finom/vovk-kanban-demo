@@ -24,6 +24,7 @@ const { tools } = createLLMTools({
 const handler = createMcpHandler(
   (server) => {
     tools.forEach(({ name, execute, description, parameters }) => {
+      console.log({ name, description, parameters });
       server.tool(
         name,
         description,
@@ -40,7 +41,7 @@ const authorizedHandler = async (req: Request) => {
   const { MCP_ACCESS_KEY } = process.env;
   const accessKey = new URL(req.url).searchParams.get("mcp_access_key");
   if (MCP_ACCESS_KEY && accessKey !== MCP_ACCESS_KEY) {
-    return new Response("Unauthorized", { status: 401 });
+    return new Response("mcp_access_key is invalid", { status: 401 });
   }
   return handler(req);
 };
