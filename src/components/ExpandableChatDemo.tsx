@@ -1,8 +1,6 @@
 "use client";
 import {
   Bot,
-  Paperclip,
-  Mic,
   CornerDownLeft,
   MoveDownRight,
   MessageSquare,
@@ -36,17 +34,18 @@ import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
-  ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 
 import { Response } from "@/components/ai-elements/response";
+import { CodeBlock } from "@/components/ai-elements/code-block";
+import { AiSdkRPC } from "vovk-client";
 
 export function ExpandableChatDemo() {
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, error, status } = useChat({
+  const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: "/api/ai/ai-sdk/function-calling",
+      api: AiSdkRPC.functionCalling.getURL(), // "/api/ai-sdk/function-calling",
     }),
     onToolCall: (toolCall) => {
       console.log("Tool call initiated:", toolCall);
@@ -65,14 +64,6 @@ export function ExpandableChatDemo() {
     useRegistry.getState().parse(messages);
   }, [messages]);
 
-  const handleAttachFile = () => {
-    //
-  };
-
-  const handleMicrophoneClick = () => {
-    //
-  };
-
   return (
     <div className="h-[600px] relative">
       <ExpandableChat
@@ -89,9 +80,9 @@ export function ExpandableChatDemo() {
         }
       >
         <ExpandableChatHeader className="flex-col text-center justify-center">
-          <h1 className="text-xl font-semibold">Realtime UI ✨</h1>
+          <h1 className="text-xl font-semibold">Realtime Kanban Chat ✨</h1>
           <p className="text-sm text-muted-foreground">
-            Tell it what you want to do: create user, assign tasks etc
+            Tell it what you want to do: create user, assign tasks, etc.
           </p>
         </ExpandableChatHeader>
         <ExpandableChatBody>
@@ -146,13 +137,7 @@ export function ExpandableChatDemo() {
                                     <ToolInput input={toolPart.input} />
                                     <ToolOutput
                                       output={
-                                        <Response>
-                                          {JSON.stringify(
-                                            toolPart.output,
-                                            null,
-                                            2,
-                                          )}
-                                        </Response>
+                                        <CodeBlock code={JSON.stringify(toolPart.output, null, 2)} language="json" />
                                       }
                                       errorText={toolPart.errorText}
                                     />
@@ -169,7 +154,6 @@ export function ExpandableChatDemo() {
             </ConversationContent>
           </Conversation>
         </ExpandableChatBody>
-        {error && <div>❌ {error.message}</div>}
         <ExpandableChatFooter>
           <form
             onSubmit={handleSubmit}
@@ -188,25 +172,6 @@ export function ExpandableChatDemo() {
               className="min-h-12 resize-none rounded-lg bg-background border-0 p-3 shadow-none focus-visible:ring-0"
             />
             <div className="flex items-center p-3 pt-0 justify-between">
-              <div className="flex">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  type="button"
-                  onClick={handleAttachFile}
-                >
-                  <Paperclip className="size-4" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  type="button"
-                  onClick={handleMicrophoneClick}
-                >
-                  <Mic className="size-4" />
-                </Button>
-              </div>
               <Button type="submit" size="sm" className="ml-auto gap-1.5">
                 Send Message
                 <CornerDownLeft className="size-3.5" />

@@ -1,7 +1,0 @@
-{
-  "$schema": "https://vovk.dev/api/schema/v3/segment.json",
-  "emitSchema": false,
-  "segmentName": "ai",
-  "segmentType": "segment",
-  "controllers": {}
-}
