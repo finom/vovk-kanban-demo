@@ -47,7 +47,7 @@ export default class AiSdkController {
           tool({
             execute,
             description,
-            inputSchema: jsonSchema(parameters as JSONSchema7),
+            inputSchema: jsonSchema(parameters),
           }),
         ]),
       ),
