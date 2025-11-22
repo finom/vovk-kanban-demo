@@ -132,6 +132,11 @@ export default function useWebRTCAudioSession(
     remoteAudioContextRef.current?.close();
     remoteAudioContextRef.current = null;
     remoteAnalyserRef.current = null;
+    if (audioElement.current) {
+      audioElement.current.volume = 0;
+      audioElement.current = null;
+    }
+
     if (remoteMonitorIntervalRef.current) {
       clearInterval(remoteMonitorIntervalRef.current);
       remoteMonitorIntervalRef.current = null;

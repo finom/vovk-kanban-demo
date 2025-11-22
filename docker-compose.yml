@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: vovk-kanban-demo-db
+      POSTGRES_DB: realtime-kanban-db
     ports:
       - "5432:5432"
   pg_proxy:
