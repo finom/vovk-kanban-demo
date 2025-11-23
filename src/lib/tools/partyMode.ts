@@ -1,7 +1,7 @@
 import confetti from "canvas-confetti";
 import { animate as framerAnimate } from "framer-motion";
 
-const partyFunction = () => {
+const partyMode = () => {
   try {
     const duration = 5 * 1000;
     const colors = [
@@ -109,4 +109,4 @@ const partyFunction = () => {
   }
 };
 
-export default partyFunction;
+export default partyMode;

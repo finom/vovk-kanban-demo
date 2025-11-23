@@ -1,7 +1,7 @@
 import { createLLMTools, type VovkLLMTool } from "vovk";
 import { TaskRPC, UserRPC } from "vovk-client";
-import timeFunction from "./timeFunction";
-import partyFunction from "./partyFunction";
+import getCurrentTime from "./getCurrentTime";
+import partyMode from "./partyMode";
 
 const tools: VovkLLMTool[] = [
   ...createLLMTools({
@@ -9,17 +9,17 @@ const tools: VovkLLMTool[] = [
   }).tools,
   {
     type: "function",
-    name: "get_current_time",
+    name: "getCurrentTime",
     description: "Gets the current time in the user's timezone",
     parameters: {},
-    execute: timeFunction,
+    execute: getCurrentTime,
   },
   {
     type: "function",
-    name: "party_mode",
+    name: "partyMode",
     description: "Triggers a confetti animation on the page",
     parameters: {},
-    execute: partyFunction,
+    execute: partyMode,
   },
 ];
 

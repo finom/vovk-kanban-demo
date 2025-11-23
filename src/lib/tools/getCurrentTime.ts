@@ -1,4 +1,4 @@
-const timeFunction = () => {
+const getCurrentTime = () => {
   const now = new Date();
   return {
     success: true,
@@ -13,4 +13,4 @@ const timeFunction = () => {
   };
 };
 
-export default timeFunction;
+export default getCurrentTime;

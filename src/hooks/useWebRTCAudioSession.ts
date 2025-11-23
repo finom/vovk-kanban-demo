@@ -137,7 +137,6 @@ export default function useWebRTCAudioSession(
     remoteAnalyserRef.current = null;
     // Stop the audio immediately
     if (audioElement.current) {
-      audioElement.current.volume = 0;
       audioElement.current.srcObject = null;
       audioElement.current = null;
     }
