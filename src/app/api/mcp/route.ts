@@ -3,6 +3,7 @@ import { createLLMTools, KnownAny } from "vovk";
 import UserController from "@/modules/user/UserController";
 import TaskController from "@/modules/task/TaskController";
 import { jsonSchemaObjectToZodRawShape } from "zod-v3-via-v4-from-json-schema"; // TODO: Temporary fix
+import { NextResponse } from "next/server";
 
 const { tools } = createLLMTools({
   modules: {
@@ -41,7 +42,17 @@ const authorizedHandler = (req: Request) => {
   const { MCP_ACCESS_KEY } = process.env;
   const accessKey = new URL(req.url).searchParams.get("mcp_access_key");
   if (MCP_ACCESS_KEY && accessKey !== MCP_ACCESS_KEY) {
-    return new Response("mcp_access_key is invalid", { status: 401 });
+    return NextResponse.json(
+      {
+        content: [
+          {
+            type: "text",
+            text: "Unable to authorize the MCP request: mcp_access_key is invalid",
+          },
+        ],
+      },
+      { status: 401 },
+    );
   }
   return handler(req);
 };
