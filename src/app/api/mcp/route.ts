@@ -3,7 +3,6 @@ import { createLLMTools, KnownAny } from "vovk";
 import UserController from "@/modules/user/UserController";
 import TaskController from "@/modules/task/TaskController";
 import { jsonSchemaObjectToZodRawShape } from "zod-v3-via-v4-from-json-schema"; // TODO: Temporary fix
-import { NextResponse } from "next/server";
 
 const { tools } = createLLMTools({
   modules: {
@@ -38,47 +37,11 @@ const handler = createMcpHandler(
   { basePath: "/api" },
 );
 
-const authorizedHandler = async (req: Request) => {
+const authorizedHandler = (req: Request) => {
   const { MCP_ACCESS_KEY } = process.env;
   const accessKey = new URL(req.url).searchParams.get("mcp_access_key");
   if (MCP_ACCESS_KEY && accessKey !== MCP_ACCESS_KEY) {
-    const body = await req.json();
-    const id = body?.id ?? 0;
-    /*
-    {
-  method: 'initialize',
-  params: {
-    protocolVersion: '2025-06-18',
-    capabilities: {},
-    clientInfo: { name: 'Anthropic/ClaudeAI', version: '1.0.0' }
-  },
-  jsonrpc: '2.0',
-  id: 0
-}
-  
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "error": {
-    "code": -32602,
-    "message": "Unsupported protocol version",
-    "data": {
-      "supported": ["2024-11-05"],
-      "requested": "1.0.0"
-    }
-  }
-}*/
-    return NextResponse.json(
-      {
-        jsonrpc: "2.0",
-        id,
-        error: {
-          code: 401,
-          message: "Unable to authorize the MCP request: mcp_access_key query parameter is invalid",
-        },
-      },
-      { status: 401 },
-    );
+    return new Response("Unable to authorize the MCP request: mcp_access_key query parameter is invalid", { status: 401 });
   }
   return handler(req);
 };
