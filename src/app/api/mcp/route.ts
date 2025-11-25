@@ -38,10 +38,11 @@ const handler = createMcpHandler(
   { basePath: "/api" },
 );
 
-const authorizedHandler = (req: Request) => {
+const authorizedHandler = async (req: Request) => {
   const { MCP_ACCESS_KEY } = process.env;
   const accessKey = new URL(req.url).searchParams.get("mcp_access_key");
   if (MCP_ACCESS_KEY && accessKey !== MCP_ACCESS_KEY) {
+    console.log('BODY', await req.json());
     return NextResponse.json(
       {
         content: [
