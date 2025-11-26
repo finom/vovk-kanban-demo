@@ -8,7 +8,7 @@ import { DatabasePollRPC } from "vovk-client";
 export default function useDatabasePolling(initialValue = false) {
   const MAX_RETRIES = 5;
   const [isPollingEnabled, setIsPollingEnabled] = useState(initialValue);
-  const pollingAbortControllerRef = useRef<AbortController | null>(null);
+  const abortRef = useRef<() => void | null>(null);
 
   useEffect(() => {
     const isEnabled = localStorage.getItem("isPollingEnabled");
@@ -19,27 +19,31 @@ export default function useDatabasePolling(initialValue = false) {
     localStorage.setItem("isPollingEnabled", isPollingEnabled.toString());
     async function poll(retries = 0) {
       if (!isPollingEnabled) {
-        pollingAbortControllerRef.current?.abort();
+        abortRef.current?.();
         return;
       }
       try {
         while (true) {
-          console.log("START POLLING");
+          console.log("Polling database for updates...");
           const iterable = await DatabasePollRPC.poll();
-          pollingAbortControllerRef.current = iterable.abortController;
+          abortRef.current = iterable.abortWithoutError;
 
           for await (const iteration of iterable) {
             console.log("New DB update:", iteration);
           }
+
+          if(iterable.abortController.signal.aborted) {
+            console.log("Polling aborted with abortWithoutError");
+            break;
+          }
         }
       } catch (error) {
-        if (
-          retries < MAX_RETRIES &&
-          (error as Error & { cause?: Error }).cause?.name !== "AbortError"
-        ) {
+        if (retries < MAX_RETRIES) {
           console.error("Polling failed, retrying...", error);
           await new Promise((resolve) => setTimeout(resolve, 2000));
           return poll(retries + 1);
+        } else {
+          console.error("Max polling retries reached. Stopping polling.", error);
         }
       }
     }
@@ -47,7 +51,7 @@ export default function useDatabasePolling(initialValue = false) {
     void poll();
 
     return () => {
-      pollingAbortControllerRef.current?.abort();
+      abortRef.current?.();
     };
   }, [isPollingEnabled]);
 
