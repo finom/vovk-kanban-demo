@@ -20,7 +20,9 @@ model User {
   id         String     @id @default(uuid())
   /// @zod.custom.use(z.literal('user'))
   entityType EntityType @default(user)
+  /// @zod.meta({ description: "Timestamp when the user was created", examples: ["2023-01-01T00:00:00.000Z"] })
   createdAt  DateTime   @default(now())
+  /// @zod.meta({ description: "Timestamp when the user was last updated", examples: ["2023-01-01T00:00:00.000Z"] })
   updatedAt  DateTime   @default(now()) @updatedAt
 
   /// @zod.meta({ examples: ["John Doe"], description: "Full name of the user" })
@@ -40,7 +42,9 @@ model Task {
   id         String     @id @default(uuid())
   /// @zod.custom.use(z.literal('task'))
   entityType EntityType @default(task)
+  /// @zod.meta({ description: "Timestamp when the task was created", examples: ["2023-01-01T00:00:00.000Z"] })
   createdAt  DateTime   @default(now())
+  /// @zod.meta({ description: "Timestamp when the task was last updated", examples: ["2023-01-01T00:00:00.000Z"] })
   updatedAt  DateTime   @default(now()) @updatedAt
 
   /// @zod.meta({ examples: ["Implement authentication"], description: "Title of the task" })

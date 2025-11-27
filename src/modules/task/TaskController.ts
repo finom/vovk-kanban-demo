@@ -15,7 +15,10 @@ export default class TaskController {
   })
   @get()
   @sessionGuard()
-  static getTasks = withZod({ handle: TaskService.getTasks });
+  static getTasks = withZod({
+    output: TaskSchema.array(),
+    handle: TaskService.getTasks,
+  });
 
   @operation({
     summary: "Find tasks by ID, title or description",
@@ -32,6 +35,7 @@ export default class TaskController {
         examples: ["bug", "feature"],
       }),
     }),
+    output: TaskSchema.array(),
     handle: async ({ vovk }) => TaskService.findTasks(vovk.query().search),
   });
 
@@ -44,6 +48,7 @@ export default class TaskController {
   @sessionGuard()
   static getTasksByUserId = withZod({
     params: z.object({ userId: UserSchema.shape.id }),
+    output: TaskSchema.array(),
     handle: async ({ vovk }) =>
       TaskService.getTasksByUserId(vovk.params().userId),
   });
@@ -58,6 +63,7 @@ export default class TaskController {
   @sessionGuard()
   static createTask = withZod({
     body: TaskSchema.omit(BASE_FIELDS),
+    output: TaskSchema,
     handle: async ({ vovk }) => TaskService.createTask(await vovk.body()),
   });
 
@@ -72,6 +78,7 @@ export default class TaskController {
   static updateTask = withZod({
     body: TaskSchema.omit(BASE_FIELDS).partial(),
     params: TaskSchema.pick({ id: true }),
+    output: TaskSchema,
     handle: async ({ vovk }) =>
       TaskService.updateTask(vovk.params().id, await vovk.body()),
   });
@@ -85,6 +92,9 @@ export default class TaskController {
   @sessionGuard()
   static deleteTask = withZod({
     params: TaskSchema.pick({ id: true }),
+    output: TaskSchema.partial().extend({
+      __isDeleted: z.literal(true),
+    }),
     handle: async ({ vovk }) => TaskService.deleteTask(vovk.params().id),
   });
 }

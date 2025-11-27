@@ -32,7 +32,7 @@ export default function useDatabasePolling(initialValue = false) {
             console.log("New DB update:", iteration);
           }
 
-          if(iterable.abortController.signal.aborted) {
+          if (iterable.abortController.signal.aborted) {
             console.log("Polling aborted with abortWithoutError");
             break;
           }
@@ -43,7 +43,10 @@ export default function useDatabasePolling(initialValue = false) {
           await new Promise((resolve) => setTimeout(resolve, 2000));
           return poll(retries + 1);
         } else {
-          console.error("Max polling retries reached. Stopping polling.", error);
+          console.error(
+            "Max polling retries reached. Stopping polling.",
+            error,
+          );
         }
       }
     }

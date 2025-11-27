@@ -1,6 +1,6 @@
 import { prefix, get, put, post, del, operation } from "vovk";
 import { z } from "zod";
-import { UserSchema } from "@schemas/index";
+import { TaskSchema, UserSchema } from "@schemas/index";
 import { sessionGuard } from "@/decorators/sessionGuard";
 import { withZod } from "@/lib/withZod";
 import { BASE_FIELDS } from "@/constants";
@@ -15,7 +15,10 @@ export default class UserController {
   })
   @get()
   @sessionGuard()
-  static getUsers = withZod({ handle: UserService.getUsers });
+  static getUsers = withZod({
+    output: UserSchema.array(),
+    handle: UserService.getUsers,
+  });
 
   @operation({
     summary: "Find users by ID, full name, or email",
@@ -32,6 +35,7 @@ export default class UserController {
         examples: ["john.doe", "Jane"],
       }),
     }),
+    output: UserSchema.array(),
     handle: ({ vovk }) => UserService.findUsers(vovk.query().search),
   });
 
@@ -44,6 +48,7 @@ export default class UserController {
   @sessionGuard()
   static createUser = withZod({
     body: UserSchema.omit(BASE_FIELDS),
+    output: UserSchema,
     handle: async ({ vovk }) => UserService.createUser(await vovk.body()),
   });
 
@@ -58,6 +63,7 @@ export default class UserController {
   static updateUser = withZod({
     body: UserSchema.omit(BASE_FIELDS).partial(),
     params: UserSchema.pick({ id: true }),
+    output: UserSchema,
     handle: async ({ vovk }) =>
       UserService.updateUser(vovk.params().id, await vovk.body()),
   });
@@ -71,6 +77,10 @@ export default class UserController {
   @sessionGuard()
   static deleteUser = withZod({
     params: UserSchema.pick({ id: true }),
+    output: UserSchema.partial().extend({
+      __isDeleted: z.literal(true),
+      tasks: TaskSchema.partial().extend({ __isDeleted: z.literal(true) }).array(),
+    }),
     handle: async ({ vovk }) => UserService.deleteUser(vovk.params().id),
   });
 }

@@ -12,6 +12,7 @@ export default class RealtimeController {
       voice: z.enum(["ash", "ballad", "coral", "sage", "verse"]),
     }),
     body: z.object({ sdp: z.string() }),
+    output: z.object({ sdp: z.string() }),
     async handle(req) {
       const sessionConfig = JSON.stringify({
         type: "realtime",

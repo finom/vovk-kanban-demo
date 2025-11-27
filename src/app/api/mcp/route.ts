@@ -41,7 +41,10 @@ const authorizedHandler = (req: Request) => {
   const { MCP_ACCESS_KEY } = process.env;
   const accessKey = new URL(req.url).searchParams.get("mcp_access_key");
   if (MCP_ACCESS_KEY && accessKey !== MCP_ACCESS_KEY) {
-    return new Response("Unable to authorize the MCP request: mcp_access_key query parameter is invalid", { status: 401 });
+    return new Response(
+      "Unable to authorize the MCP request: mcp_access_key query parameter is invalid",
+      { status: 401 },
+    );
   }
   return handler(req);
 };

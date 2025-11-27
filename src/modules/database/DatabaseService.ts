@@ -20,7 +20,25 @@ export default class DatabaseService {
     DatabaseEventsService.beginEmitting();
 
     return prisma.$extends({
+      // Ensure createdAt and updatedAt are always ISO strings
+      result: {
+        $allModels: {
+          createdAt: {
+            compute(data: { createdAt: Date }) {
+              return data.createdAt.toISOString()
+            }
+          },
+          updatedAt: {
+            compute(data: { updatedAt: Date }) {
+              return data.updatedAt.toISOString()
+            }
+          }
+        }
+      }
+    })
+    .$extends({
       name: "events",
+      // Emit database change events for create, update, and delete operations
       query: {
         $allModels: {
           async $allOperations({ model, operation, args, query }) {

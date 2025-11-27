@@ -8,7 +8,6 @@ import { TaskType } from "@schemas/models/Task.schema";
 import { BASE_KEYS } from "@/constants";
 import DatabaseService from "../database/DatabaseService";
 
-
 export default class EmbeddingService {
   static async generateEmbedding(value: string): Promise<number[]> {
     const { embedding } = await embed({
@@ -63,11 +62,12 @@ export default class EmbeddingService {
     );
     const capitalizedEntityType = capitalize(entityType);
 
-    const results = await DatabaseService.prisma.$queryRaw<
-      (T & { similarity: number })[]
+    // find similar vectors and return entity IDs
+    const vectorResults = await DatabaseService.prisma.$queryRaw<
+      ({ id: String; similarity: number })[]
     >`
     SELECT
-      *,
+      id,
       1 - (embedding <=> ${`[${queryEmbedding.join(",")}]`}::vector) as similarity
     FROM ${Prisma.raw(`"${capitalizedEntityType}"`)}
     WHERE embedding IS NOT NULL
@@ -76,6 +76,14 @@ export default class EmbeddingService {
     LIMIT ${limit}
   `;
 
-    return results.map((item) => omit(item, ["embedding"]));
+    return DatabaseService.prisma[
+      entityType as "user"
+    ].findMany({
+      where: {
+        id: {
+          in: vectorResults.map((r) => r.id as string),
+        },
+      },
+    }) as Promise<T[]>;
   }
 }
