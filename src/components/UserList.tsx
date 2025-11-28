@@ -21,7 +21,13 @@ const UserList = ({ initialData }: Props) => {
   // 2. After HydrateRegistry (see page.tsx) parses initial data
   // 3. After useQuery fetches fresh data
   const users = useRegistry(
-    useShallow((state) => Object.values((isEmpty(state.user) ? getEntitiesFromData(initialData).user ?? {} : state.user))),
+    useShallow((state) =>
+      Object.values(
+        isEmpty(state.user)
+          ? (getEntitiesFromData(initialData).user ?? {})
+          : state.user,
+      ),
+    ),
   );
 
   useQuery({

@@ -87,7 +87,9 @@ export const KanbanCard = ({
       data: { index, parent },
     });
   const assignee = useRegistry(
-    useShallow((state) => pick(state.user[task.userId], ['email', 'fullName', 'imageUrl'])),
+    useShallow((state) =>
+      pick(state.user[task.userId], ["email", "fullName", "imageUrl"]),
+    ),
   );
   return (
     <motion.div
@@ -272,7 +274,13 @@ const UserKanban = ({ initialData }: Props) => {
   // 2. After HydrateRegistry (see page.tsx) parses initial data
   // 3. After useQuery fetches fresh data
   const tasks = useRegistry(
-    useShallow((state) => Object.values((isEmpty(state.task) ? getEntitiesFromData(initialData).task ?? {} : state.task))),
+    useShallow((state) =>
+      Object.values(
+        isEmpty(state.task)
+          ? (getEntitiesFromData(initialData).task ?? {})
+          : state.task,
+      ),
+    ),
   );
 
   useQuery({

@@ -41,7 +41,9 @@ interface Props {
 const TaskDialog = ({ taskId, children }: Props) => {
   const task = useRegistry(
     useShallow((state) =>
-      taskId ? pick(state.task[taskId], ['title', 'description', 'status', 'userId']) : null,
+      taskId
+        ? pick(state.task[taskId], ["title", "description", "status", "userId"])
+        : null,
     ),
   );
   const users = useRegistry(useShallow((state) => Object.values(state.user)));

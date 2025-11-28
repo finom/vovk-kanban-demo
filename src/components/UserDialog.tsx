@@ -30,7 +30,7 @@ interface Props {
 const UserDialog = ({ userId, children }: Props) => {
   const user = useRegistry(
     useShallow((state) =>
-      userId ? pick(state.user[userId], ['email', 'fullName']) : null,
+      userId ? pick(state.user[userId], ["email", "fullName"]) : null,
     ),
   );
   const {

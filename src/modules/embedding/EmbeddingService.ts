@@ -64,7 +64,7 @@ export default class EmbeddingService {
 
     // find similar vectors and return entity IDs
     const vectorResults = await DatabaseService.prisma.$queryRaw<
-      ({ id: String; similarity: number })[]
+      { id: String; similarity: number }[]
     >`
     SELECT
       id,
@@ -76,9 +76,7 @@ export default class EmbeddingService {
     LIMIT ${limit}
   `;
 
-    return DatabaseService.prisma[
-      entityType as "user"
-    ].findMany({
+    return DatabaseService.prisma[entityType as "user"].findMany({
       where: {
         id: {
           in: vectorResults.map((r) => r.id as string),

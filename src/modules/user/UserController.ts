@@ -79,7 +79,9 @@ export default class UserController {
     params: UserSchema.pick({ id: true }),
     output: UserSchema.partial().extend({
       __isDeleted: z.literal(true),
-      tasks: TaskSchema.partial().extend({ __isDeleted: z.literal(true) }).array(),
+      tasks: TaskSchema.partial()
+        .extend({ __isDeleted: z.literal(true) })
+        .array(),
     }),
     handle: async ({ vovk }) => UserService.deleteUser(vovk.params().id),
   });

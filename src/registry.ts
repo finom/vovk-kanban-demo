@@ -13,7 +13,9 @@ interface Registry {
 
 export function getEntitiesFromData(
   data: unknown,
-  entities: Partial<{ [key in EntityType]: Record<BaseEntity['id'], BaseEntity> }> = {},
+  entities: Partial<{
+    [key in EntityType]: Record<BaseEntity["id"], BaseEntity>;
+  }> = {},
 ) {
   if (Array.isArray(data)) {
     data.forEach((item) => getEntitiesFromData(item, entities));
@@ -38,26 +40,29 @@ export const useRegistry = create<Registry>((set, get) => ({
     const entities = getEntitiesFromData(data);
     set((state) => {
       const newState: Record<string, unknown> = {};
+      let isChanged = false;
       Object.entries(entities).forEach(([entityType, entityMap]) => {
         const type = entityType as EntityType;
         const descriptors = Object.getOwnPropertyDescriptors(state[type] ?? {});
+        let areDescriptorsChanged = false;
         Object.values(entityMap).forEach((entity) => {
           const descriptorValue = descriptors[entity.id]?.value;
           const value = { ...descriptorValue, ...entity };
-          descriptors[entity.id] =
-            descriptorValue && fastDeepEqual(descriptorValue, value)
-              ? descriptors[entity.id]
-              : ({
-                  value,
-                  configurable: true,
-                  writable: false,
-                } satisfies PropertyDescriptor);
-          descriptors[entity.id].enumerable = !("__isDeleted" in entity);
+          const isCurrentChanged = !fastDeepEqual(descriptorValue, value);
+          descriptors[entity.id] = isCurrentChanged
+            ? ({
+                value,
+                configurable: true,
+                writable: false,
+                enumerable: !("__isDeleted" in entity),
+              } satisfies PropertyDescriptor)
+            : descriptors[entity.id];
+          areDescriptorsChanged ||= isCurrentChanged;
         });
-        newState[type] = Object.defineProperties({}, descriptors);
+        newState[type] = areDescriptorsChanged ? Object.defineProperties({}, descriptors) : state[type];
+        isChanged ||= areDescriptorsChanged;
       });
-      const resultState = { ...state, ...newState };
-      return resultState;
+      return isChanged ? { ...state, ...newState } : state;
     });
   },
 }));
