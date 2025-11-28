@@ -2,25 +2,27 @@
 import { useShallow } from "zustand/shallow";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import UserDialog from "./UserDialog";
-import { useRegistry } from "@/registry";
+import { getEntitiesFromData, useRegistry } from "@/registry";
 import { Button } from "./ui/button";
 import { Pencil, Plus } from "lucide-react";
 import { useEffect } from "react";
 import { UserRPC } from "vovk-client";
 import { useQuery } from "@tanstack/react-query";
 import { UserType } from "@schemas/models/User.schema";
+import { isEmpty } from "lodash";
 
 interface Props {
   initialData: UserType[];
 }
 
 const UserList = ({ initialData }: Props) => {
+  // Note: Renders 3 times
+  // 1. Initial render (no data in registry)
+  // 2. After HydrateRegistry (see page.tsx) parses initial data
+  // 3. After useQuery fetches fresh data
   const users = useRegistry(
-    useShallow((state) => state.values({ user: initialData }).user),
+    useShallow((state) => Object.values((isEmpty(state.user) ? getEntitiesFromData(initialData).user ?? {} : state.user))),
   );
-  useEffect(() => {
-    useRegistry.getState().sync({ user: initialData });
-  }, [initialData]);
 
   useQuery({
     queryKey: UserRPC.getUsers.queryKey(),

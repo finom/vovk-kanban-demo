@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@hookform/error-message";
-import { omit } from "lodash";
+import { pick } from "lodash";
 import {
   Dialog,
   DialogClose,
@@ -31,7 +31,6 @@ import {
 } from "./ui/select";
 import { TaskStatus } from "@prisma/client";
 import { Textarea } from "./ui/textarea";
-import { BASE_KEYS } from "@/constants";
 import { TaskType } from "@schemas/models/Task.schema";
 
 interface Props {
@@ -42,7 +41,7 @@ interface Props {
 const TaskDialog = ({ taskId, children }: Props) => {
   const task = useRegistry(
     useShallow((state) =>
-      taskId ? omit(state.task[taskId], BASE_KEYS) : null,
+      taskId ? pick(state.task[taskId], ['title', 'description', 'status', 'userId']) : null,
     ),
   );
   const users = useRegistry(useShallow((state) => Object.values(state.user)));

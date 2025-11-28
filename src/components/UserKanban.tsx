@@ -14,17 +14,18 @@ import {
 } from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import type { ReactNode } from "react";
-import { useMemo, useId, useEffect, useState } from "react";
+import { useMemo, useId, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { TaskRPC } from "vovk-client";
-import { useRegistry } from "@/registry";
+import { getEntitiesFromData, useRegistry } from "@/registry";
 import { useShallow } from "zustand/shallow";
 import { TaskStatus } from "@prisma/client";
 import TaskDialog from "./TaskDialog";
 import { useQuery } from "@tanstack/react-query";
 import { TaskType } from "@schemas/models/Task.schema";
 import { UserType } from "@schemas/models/User.schema";
+import { isEmpty, pick } from "lodash";
 
 // Utils function
 function cn(...classes: (string | undefined | null | boolean)[]): string {
@@ -78,7 +79,7 @@ export const KanbanCard = ({
   parent,
   task,
   className,
-  disableAnimation, // added
+  disableAnimation,
 }: KanbanCardProps & { disableAnimation?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -86,7 +87,7 @@ export const KanbanCard = ({
       data: { index, parent },
     });
   const assignee = useRegistry(
-    useShallow((state) => state.user[task.userId] as UserType | undefined),
+    useShallow((state) => pick(state.user[task.userId], ['email', 'fullName', 'imageUrl'])),
   );
   return (
     <motion.div
@@ -218,14 +219,14 @@ export const KanbanHeader = ({ status }: { status: TaskStatus }) => {
 export type KanbanProviderProps = {
   children: ReactNode;
   onDragEnd: (event: DragEndEvent) => void;
-  onDragStart?: (event: DragStartEvent) => void; // added
+  onDragStart?: (event: DragStartEvent) => void;
   className?: string;
 };
 
 export const KanbanProvider = ({
   children,
   onDragEnd,
-  onDragStart, // added
+  onDragStart,
   className,
 }: KanbanProviderProps) => {
   const id = useId();
@@ -252,7 +253,7 @@ export const KanbanProvider = ({
     <DndContext
       sensors={sensors}
       collisionDetection={rectIntersection}
-      onDragStart={onDragStart} // added
+      onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       id={id}
     >
@@ -266,12 +267,13 @@ interface Props {
 }
 
 const UserKanban = ({ initialData }: Props) => {
+  // Note: Renders 3 times
+  // 1. Initial render (no data in registry)
+  // 2. After HydrateRegistry (see page.tsx) parses initial data
+  // 3. After useQuery fetches fresh data
   const tasks = useRegistry(
-    useShallow((state) => state.values({ task: initialData }).task),
+    useShallow((state) => Object.values((isEmpty(state.task) ? getEntitiesFromData(initialData).task ?? {} : state.task))),
   );
-  useEffect(() => {
-    useRegistry.getState().sync({ task: initialData });
-  }, [initialData]);
 
   useQuery({
     queryKey: TaskRPC.getTasks.queryKey(),
@@ -280,10 +282,10 @@ const UserKanban = ({ initialData }: Props) => {
 
   const statuses = useMemo(() => Object.values(TaskStatus), []);
 
-  const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null); // added
+  const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
   const [optimisticStatus, setOptimisticStatus] = useState<
     Record<string, TaskStatus>
-  >({}); // added
+  >({});
 
   const handleDragStart = (event: DragStartEvent) => {
     setDraggingTaskId(event.active.id as string);
@@ -346,16 +348,6 @@ const UserKanban = ({ initialData }: Props) => {
       });
   };
 
-  const tasksByStatus = useMemo(() => {
-    return statuses.reduce(
-      (acc, status) => {
-        acc[status] = [];
-        return acc;
-      },
-      {} as Record<string, TaskType[]>,
-    );
-  }, [statuses]);
-
   // Re-distribute tasks considering optimistic status overrides
   const distributed = useMemo(() => {
     const bucket = statuses.reduce(
@@ -385,7 +377,7 @@ const UserKanban = ({ initialData }: Props) => {
             </TaskDialog>
           </div>
           <KanbanProvider
-            onDragStart={handleDragStart} // added
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
             {statuses.map((status) => (

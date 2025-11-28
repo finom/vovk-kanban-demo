@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@hookform/error-message";
-import { omit } from "lodash";
+import { pick } from "lodash";
 import {
   Dialog,
   DialogClose,
@@ -20,7 +20,6 @@ import { useEffect, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useShallow } from "zustand/shallow";
-import { BASE_KEYS } from "@/constants";
 import { UserType } from "@schemas/models/User.schema";
 
 interface Props {
@@ -31,7 +30,7 @@ interface Props {
 const UserDialog = ({ userId, children }: Props) => {
   const user = useRegistry(
     useShallow((state) =>
-      userId ? omit(state.user[userId], BASE_KEYS) : null,
+      userId ? pick(state.user[userId], ['email', 'fullName']) : null,
     ),
   );
   const {

@@ -4,6 +4,7 @@ import UserController from "@/modules/user/UserController";
 import UserKanban from "@/components/UserKanban";
 import RealTimeDemo from "@/components/RealTimeDemo";
 import TaskController from "@/modules/task/TaskController";
+import HydrateRegistry from "@/components/HydrateRegistry";
 import { UserType } from "@schemas/models/User.schema";
 import { TaskType } from "@schemas/models/Task.schema";
 import { verifySession } from "@/lib/dal";
@@ -23,6 +24,7 @@ export default async function Home() {
   return (
     <>
       <AppHeader />
+      <HydrateRegistry users={usersInitialData} tasks={tasksInitialData} />
       <UserList initialData={usersInitialData} />
       <UserKanban initialData={tasksInitialData} />
       <ExpandableChatDemo />

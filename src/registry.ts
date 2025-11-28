@@ -5,61 +5,43 @@ import { EntityType } from "@prisma/client";
 import { create } from "zustand";
 import fastDeepEqual from "fast-deep-equal";
 
-// Utility type to convert record to array
-type RecordsToArrays<T> = {
-  [K in keyof T]: T[K] extends Record<string, infer V> ? V[] : T[K];
-};
-
 interface Registry {
   [EntityType.user]: Record<UserType["id"], UserType>;
   [EntityType.task]: Record<TaskType["id"], TaskType>;
-  parse: (data: unknown) => Partial<{
-    [key in EntityType]: BaseEntity[];
-  }>;
-  sync: (
-    initialData: Partial<
-      RecordsToArrays<Omit<Registry, "parse" | "sync" | "values">>
-    >,
-  ) => boolean;
-  values: (
-    initialData?: Partial<
-      RecordsToArrays<Omit<Registry, "parse" | "sync" | "values">>
-    >,
-  ) => RecordsToArrays<Omit<Registry, "parse" | "sync" | "values">>;
+  parse: (data: unknown) => void;
 }
 
-function getEntitiesFromResponse(
+export function getEntitiesFromData(
   data: unknown,
-  entities: Partial<{ [key in EntityType]: BaseEntity[] }> = {},
+  entities: Partial<{ [key in EntityType]: Record<BaseEntity['id'], BaseEntity> }> = {},
 ) {
   if (Array.isArray(data)) {
-    data.forEach((item) => getEntitiesFromResponse(item, entities));
+    data.forEach((item) => getEntitiesFromData(item, entities));
   } else if (typeof data === "object" && data !== null) {
     Object.values(data).forEach((value) =>
-      getEntitiesFromResponse(value, entities),
+      getEntitiesFromData(value, entities),
     );
     if ("entityType" in data && "id" in data) {
       const entityType = data.entityType as EntityType;
-      entities[entityType] ??= [];
-      entities[entityType].push(data as BaseEntity);
+      const id = (data as BaseEntity).id;
+      entities[entityType] ??= {};
+      entities[entityType][id] = data as BaseEntity;
     }
   }
-  return entities;
+  return entities as Partial<Omit<Registry, "parse">>;
 }
-
-const synced: Partial<Record<EntityType, boolean>> = {};
 
 export const useRegistry = create<Registry>((set, get) => ({
   [EntityType.user]: {},
   [EntityType.task]: {},
   parse: (data) => {
-    const entities = getEntitiesFromResponse(data);
+    const entities = getEntitiesFromData(data);
     set((state) => {
       const newState: Record<string, unknown> = {};
-      Object.entries(entities).forEach(([entityType, entityList]) => {
+      Object.entries(entities).forEach(([entityType, entityMap]) => {
         const type = entityType as EntityType;
         const descriptors = Object.getOwnPropertyDescriptors(state[type] ?? {});
-        entityList.forEach((entity) => {
+        Object.values(entityMap).forEach((entity) => {
           const descriptorValue = descriptors[entity.id]?.value;
           const value = { ...descriptorValue, ...entity };
           descriptors[entity.id] =
@@ -77,47 +59,5 @@ export const useRegistry = create<Registry>((set, get) => ({
       const resultState = { ...state, ...newState };
       return resultState;
     });
-
-    return entities;
-  },
-  sync: (initialData) => {
-    const toBeParsed: Partial<{
-      [key in EntityType]: BaseEntity[];
-    }> = {};
-    const state = get();
-
-    Object.entries(initialData).forEach(([entityType, entities]) => {
-      const type = entityType as EntityType;
-      if (!synced[type]) {
-        toBeParsed[type] = entities;
-        synced[type] = true;
-      }
-    });
-
-    // Parse the entities to update the state
-    if (Object.keys(toBeParsed).length > 0) {
-      state.parse(toBeParsed);
-      return true;
-    }
-
-    return false;
-  },
-  values: (initialData = {}) => {
-    const state = get();
-    const result: Partial<
-      RecordsToArrays<Omit<Registry, "parse" | "sync" | "values">>
-    > = {};
-    Object.keys(EntityType).forEach((key) => {
-      const entityType = key as EntityType;
-      if (synced[entityType]) {
-        result[entityType] = Object.values(state[entityType]);
-      } else {
-        result[entityType] =
-          initialData[entityType] || Object.values(state[entityType]);
-      }
-    });
-    return result as RecordsToArrays<
-      Omit<Registry, "parse" | "sync" | "values">
-    >;
   },
 }));
