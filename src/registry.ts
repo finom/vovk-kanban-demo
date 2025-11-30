@@ -59,7 +59,9 @@ export const useRegistry = create<Registry>((set, get) => ({
             : descriptors[entity.id];
           areDescriptorsChanged ||= isCurrentChanged;
         });
-        newState[type] = areDescriptorsChanged ? Object.defineProperties({}, descriptors) : state[type];
+        newState[type] = areDescriptorsChanged
+          ? Object.defineProperties({}, descriptors)
+          : state[type];
         isChanged ||= areDescriptorsChanged;
       });
       return isChanged ? { ...state, ...newState } : state;

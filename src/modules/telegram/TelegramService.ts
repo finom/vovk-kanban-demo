@@ -146,11 +146,14 @@ export default class TelegramService {
   }
 
   // Send typing indicator
-  private static async sendTypingIndicator(chatId: number): Promise<void> {
+  private static async sendIndicator(
+    chatId: number,
+    action: "typing" | "record_voice",
+  ): Promise<void> {
     await TelegramAPI.sendChatAction({
       body: {
         chat_id: chatId,
-        action: "typing",
+        action,
       },
       apiRoot: this.apiRoot,
     });
@@ -167,7 +170,7 @@ export default class TelegramService {
     } = await generateObject({
       model: vercelOpenAI("gpt-5"),
       schema: z.object({
-        type: z.enum(["text", "voice", "photo"]),
+        type: z.enum(["text", "voice"]),
         processedText: z.string(),
       }),
       messages: [
@@ -175,7 +178,7 @@ export default class TelegramService {
         {
           role: "system",
           content:
-            'Determine the type of response: "text", "voice" or "photo" depending on the user request and the context. The "processedText" should be the content to send: if it\'s a text message, format it properly for Telegram parse_mode HTML and include it here, if it\'s a voice message, include the text that will be converted to speech, if it\'s a photo message, include the URL of the photo but nothing else.',
+            'Determine the type of response: "text" or "voice" depending on the user request and the context. The "processedText" should be the content to send: if it\'s a text message, format it properly for Telegram parse_mode HTML and include it here, if it\'s a voice message, include the text that will be converted to speech.',
         },
       ],
     });
@@ -276,11 +279,6 @@ export default class TelegramService {
       onError: (e) => console.error("Error", e),
     });
 
-    console.log(
-      "TOOLS",
-      tools.map((t) => t.name),
-    );
-
     // Generate a response using Vercel AI SDK
     const { text } = await generateText({
       model: vercelOpenAI("gpt-5"),
@@ -323,8 +321,6 @@ export default class TelegramService {
     systemPrompt: string,
     responsePrefix?: string,
   ): Promise<void> {
-    await this.sendTypingIndicator(chatId);
-
     const { botResponse, messages } = await this.generateAIResponse(
       chatId,
       userMessage,
@@ -364,7 +360,7 @@ export default class TelegramService {
     fileId: string,
   ): Promise<void> {
     try {
-      await this.sendTypingIndicator(chatId);
+      void this.sendIndicator(chatId, "record_voice");
 
       // Get file info from Telegram
       const { result: fileInfo } = await TelegramAPI.getFile({
@@ -399,7 +395,7 @@ export default class TelegramService {
       await this.processUserMessage(
         chatId,
         transcription.text,
-         `🎤 I heard the voice: "${transcription.text}"`,
+        `🎤 I heard the voice: "${transcription.text}"`,
         "You are a helpful assistant in a Telegram chat. The user just sent a voice message. You have access to the conversation history to maintain context. By default, you respond with voice, but if the user requests a text response, you can generate a text message. IMPORTANT: Normalize common spoken artifacts from transcription before acting: 1) Email normalization: interpret 'john at gmail dot com', 'john gmail dot com', 'john at gmail com' as emails. Replace 'at'→'@', 'dot'/'period'→'.', 'dash'/'hyphen'→'-', 'underscore'→'_', remove spaces around '@' and '.', collapse multiple dots, and ensure user@domain.tld. ALSO: If the pattern '<local> <provider> com' appears with NO 'at' or 'dot' tokens (e.g. 'valera gmail com'), treat it as '<local>@<provider>.com' (NOT '<local>.<provider>.com'). Common providers: gmail, yahoo, outlook, protonmail, icloud, yandex, mail, hotmail, live. 2) Handle split tokens: join identifiers split by spaces when clearly an email/username. 3) Convert number words inside identifiers (e.g., 'one'→'1') only when context indicates an identifier/email. 4) Prefer producing canonical actionable forms for tools (e.g., create user with email user@domain.com), while keeping polite text for the user. If ambiguity remains, ask a concise clarification.",
       );
     } catch (voiceError) {
@@ -410,6 +406,22 @@ export default class TelegramService {
       );
     }
   }
+
+  static processTextMessage = async (chatId: number, userMessage: string) => {
+    // Check if it's a command
+    const isCommand = await this.handleCommand(chatId, userMessage);
+    if (isCommand) {
+      return;
+    }
+    void this.sendIndicator(chatId, "typing");
+
+    // Process regular text message
+    await this.processUserMessage(
+      chatId,
+      userMessage,
+      "You are a helpful assistant in a Telegram chat. You have access to the conversation history to maintain context. By default, you respond with text, but if the user requests a voice response, you can generate a voice message.",
+    );
+  };
 
   // Process the update asynchronously (fire and forget)
   private static async processUpdate(update: TelegramUpdate) {
@@ -422,20 +434,7 @@ export default class TelegramService {
 
       // Handle text messages
       if (update.message?.text) {
-        const userMessage = update.message.text;
-
-        // Check if it's a command
-        const isCommand = await this.handleCommand(chatId, userMessage);
-        if (isCommand) {
-          return;
-        }
-
-        // Process regular text message
-        await this.processUserMessage(
-          chatId,
-          userMessage,
-          "You are a helpful assistant in a Telegram chat. You have access to the conversation history to maintain context. By default, you respond with text, but if the user requests a voice response, you can generate a voice message.",
-        );
+        await this.processTextMessage(chatId, update.message.text);
       }
       // Handle voice messages
       else if (update.message?.voice) {
