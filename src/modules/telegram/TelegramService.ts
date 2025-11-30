@@ -461,6 +461,8 @@ export default class TelegramService {
   static async handle(request: NextRequest) {
     const update: TelegramUpdate = await request.json();
 
+    console.log("Received Telegram update:", update);
+
     // Check if we have an update_id
     const updateId = update.update_id;
     if (!updateId) {
