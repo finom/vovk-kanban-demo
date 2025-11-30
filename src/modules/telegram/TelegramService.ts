@@ -178,12 +178,12 @@ export default class TelegramService {
         {
           role: "system",
           content:
-            'Determine the type of response: "text" or "voice" depending on the user request and the context. The "processedText" should be the content to send: if it\'s a text message, format it properly for Telegram parse_mode HTML and include it here, if it\'s a voice message, include the text that will be converted to speech.',
+            'Determine the type of response: "text" or "voice" depending on the user request (text or voice). The "processedText" should be the content to send: if it\'s a text message, format it properly for Telegram parse_mode HTML and include it here, if it\'s a voice message, include the text that will be converted to speech. Never include user IDs in the voice response.',
         },
       ],
     });
 
-    console.log(" { type, processedText }:", { type, processedText });
+    console.log("{ type, processedText }:", { type, processedText });
 
     if (type === "voice") {
       await this.sendVoiceMessage(chatId, processedText);
