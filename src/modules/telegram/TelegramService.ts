@@ -178,7 +178,7 @@ export default class TelegramService {
         {
           role: "system",
           content:
-            'Determine the type of response: "text" or "voice" depending on the user request (text or voice). The "processedText" should be the content to send: if it\'s a text message, format it properly for Telegram parse_mode HTML and include it here, if it\'s a voice message, include the text that will be converted to speech. Never include user IDs in the voice response.',
+            'Determine the type of response: "text" or "voice" depending on the user request (if user sent voice message, it should be "voice"). The "processedText" should be the content to send: if it\'s a text message, format it properly for Telegram parse_mode HTML and include it here, if it\'s a voice message, include the text that will be converted to speech. Never include user IDs in the voice response.',
         },
       ],
     });
@@ -395,7 +395,7 @@ export default class TelegramService {
       await this.processUserMessage(
         chatId,
         transcription.text,
-        `🎤 I heard the voice: "${transcription.text}"`,
+        `🎤 Voice message: "${transcription.text}"`,
         "You are a helpful assistant in a Telegram chat. The user just sent a voice message. You have access to the conversation history to maintain context. By default, you respond with voice, but if the user requests a text response, you can generate a text message. IMPORTANT: Normalize common spoken artifacts from transcription before acting: 1) Email normalization: interpret 'john at gmail dot com', 'john gmail dot com', 'john at gmail com' as emails. Replace 'at'→'@', 'dot'/'period'→'.', 'dash'/'hyphen'→'-', 'underscore'→'_', remove spaces around '@' and '.', collapse multiple dots, and ensure user@domain.tld. ALSO: If the pattern '<local> <provider> com' appears with NO 'at' or 'dot' tokens (e.g. 'valera gmail com'), treat it as '<local>@<provider>.com' (NOT '<local>.<provider>.com'). Common providers: gmail, yahoo, outlook, protonmail, icloud, yandex, mail, hotmail, live. 2) Handle split tokens: join identifiers split by spaces when clearly an email/username. 3) Convert number words inside identifiers (e.g., 'one'→'1') only when context indicates an identifier/email. 4) Prefer producing canonical actionable forms for tools (e.g., create user with email user@domain.com), while keeping polite text for the user. If ambiguity remains, ask a concise clarification.",
       );
     } catch (voiceError) {
