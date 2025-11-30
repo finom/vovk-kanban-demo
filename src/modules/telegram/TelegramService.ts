@@ -50,6 +50,8 @@ interface TelegramUpdate {
 }
 
 export default class TelegramService {
+  private static indicatorInterval: ReturnType<typeof setInterval> | undefined;
+
   static get apiRoot() {
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     if (!TELEGRAM_BOT_TOKEN) {
@@ -143,20 +145,6 @@ export default class TelegramService {
       throw new Error(`Failed to download file: ${response.statusText}`);
     }
     return Buffer.from(await response.arrayBuffer());
-  }
-
-  // Send typing indicator
-  private static async sendIndicator(
-    chatId: number,
-    action: "typing" | "record_voice",
-  ): Promise<void> {
-    await TelegramAPI.sendChatAction({
-      body: {
-        chat_id: chatId,
-        action,
-      },
-      apiRoot: this.apiRoot,
-    });
   }
 
   // Send message to user
@@ -349,13 +337,25 @@ export default class TelegramService {
     return false;
   }
 
+  static startChatActionIndicator(chatId: number, action: "typing" | "record_voice"): void {
+    this.indicatorInterval = setInterval(() => {
+      void TelegramAPI.sendChatAction({
+        body: {
+          chat_id: chatId,
+          action,
+        },
+        apiRoot: this.apiRoot,
+      });
+    }, 5000);
+  }
+
   // Process voice message
   private static async processVoiceMessage(
     chatId: number,
     fileId: string,
   ): Promise<void> {
     try {
-      void this.sendIndicator(chatId, "record_voice");
+      this.startChatActionIndicator(chatId, "record_voice");
 
       // Get file info from Telegram
       const { result: fileInfo } = await TelegramAPI.getFile({
@@ -408,7 +408,7 @@ export default class TelegramService {
     if (isCommand) {
       return;
     }
-    void this.sendIndicator(chatId, "typing");
+    this.startChatActionIndicator(chatId, "typing");
 
     // Process regular text message
     await this.processUserMessage(
@@ -466,6 +466,11 @@ export default class TelegramService {
     await this.processUpdate(update);
 
     await this.markUpdateProcessed(updateId);
+
+    if(this.indicatorInterval){
+      clearInterval(this.indicatorInterval);
+      this.indicatorInterval = undefined;
+    }
 
     return { success: true };
   }
