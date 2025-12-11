@@ -1,14 +1,12 @@
 import { ApiReferenceReact } from "@scalar/api-reference-react";
 import "@scalar/api-reference-react/style.css";
-import { headers } from "next/headers";
+import { OpenApiRPC } from "vovk-client";
 
 async function App() {
-  const isIframe = (await headers()).get("sec-fetch-dest") === "iframe";
   return (
     <ApiReferenceReact
       configuration={{
-        showSidebar: !isIframe,
-        url: "/api/static/openapi.json",
+        url: OpenApiRPC.getSpec.getURL(), // /api/static/openapi.json,
         hideModels: true,
         servers: [
           {
@@ -16,7 +14,7 @@ async function App() {
             description: "Localhost",
           },
           {
-            url: "https://hello-world.vovk.dev",
+            url: "https://kanban.vovk.dev",
             description: "Production",
           },
         ],

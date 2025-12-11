@@ -1,5 +1,6 @@
 import confetti from "canvas-confetti";
 import { animate as framerAnimate } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const partyMode = () => {
   try {

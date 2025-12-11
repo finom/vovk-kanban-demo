@@ -12,7 +12,7 @@ import {
   tool,
   type JSONSchema7,
 } from "ai";
-import { createLLMTools } from "vovk";
+import { deriveLLMTools } from "vovk";
 import { z } from "zod";
 import UserController from "../user/UserController";
 import TaskController from "../task/TaskController";
@@ -20,7 +20,7 @@ import TaskController from "../task/TaskController";
 const getAPIRoot = () => {
   const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
   if (!TELEGRAM_BOT_TOKEN) {
-    throw new Error("Missing TELEGRAM_BOT_TOKEN environment variable");
+    // TODO: throw new Error("Missing TELEGRAM_BOT_TOKEN environment variable");
   }
   return `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 };
@@ -257,7 +257,7 @@ export default class TelegramService {
       ...this.formatHistoryForVercelAI(history),
       { role: "user", content: userMessage } as const,
     ];
-    const { tools } = createLLMTools({
+    const { tools } = deriveLLMTools({
       modules: {
         UserController,
         TaskController,
@@ -338,7 +338,10 @@ export default class TelegramService {
     return false;
   }
 
-  static startChatActionIndicator(chatId: number, action: "typing" | "record_voice"): void {
+  static startChatActionIndicator(
+    chatId: number,
+    action: "typing" | "record_voice",
+  ): void {
     let i = 0;
     this.indicatorInterval = setInterval(() => {
       void TelegramAPI.sendChatAction({
@@ -437,7 +440,7 @@ export default class TelegramService {
         await this.processTextMessage(chatId, update.message.text);
       } else if (update.message?.voice) {
         await this.processVoiceMessage(chatId, update.message.voice.file_id);
-      }  else {
+      } else {
         console.error("Received unsupported message type");
         await this.sendTextMessage(
           chatId,
@@ -466,15 +469,13 @@ export default class TelegramService {
 
     await this.processUpdate(update);
 
-    if(this.indicatorInterval){
+    if (this.indicatorInterval) {
       clearInterval(this.indicatorInterval);
       this.indicatorInterval = undefined;
     }
 
-
     await this.markUpdateProcessed(updateId);
 
-  
     return { success: true };
   }
 }

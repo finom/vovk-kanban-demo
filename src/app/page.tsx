@@ -28,7 +28,6 @@ export default async function Home() {
       <UserList initialData={usersInitialData} />
       <UserKanban initialData={tasksInitialData} />
       <ExpandableChatDemo />
-      <RealTimeDemo />
     </>
   );
 }

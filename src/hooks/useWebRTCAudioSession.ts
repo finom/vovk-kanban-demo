@@ -113,10 +113,12 @@ export default function useWebRTCAudioSession(
           };
           dcRef.current?.send(JSON.stringify(response));
 
-          const responseCreate = {
-            type: "response.create",
-          };
-          dcRef.current?.send(JSON.stringify(responseCreate));
+          if (!result?.__preventResponseCreate) {
+            const responseCreate = {
+              type: "response.create",
+            };
+            dcRef.current?.send(JSON.stringify(responseCreate));
+          }
         }
       }
     };

@@ -15,7 +15,7 @@ export default class RealtimeController {
     output: z.object({ sdp: z.string() }),
     async handle({ vovk }) {
       const voice = vovk.query().voice;
-      const { sdp: sdpOffer } = (await vovk.body());
+      const { sdp: sdpOffer } = await vovk.body();
       const sessionConfig = JSON.stringify({
         type: "realtime",
         model: "gpt-realtime",
